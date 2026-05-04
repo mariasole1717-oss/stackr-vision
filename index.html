@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STACKR Vision — Screen-Aware Coach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080808;
+  --s1: #111110;
+  --s2: #191918;
+  --s3: #222220;
+  --border: rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.11);
+  --accent: #C8FF47;
+  --accent-dim: rgba(200,255,71,0.08);
+  --accent-dim2: rgba(200,255,71,0.15);
+  --blue: #60A5FA;
+  --blue-dim: rgba(96,165,250,0.08);
+  --orange: #FB923C;
+  --orange-dim: rgba(251,146,60,0.08);
+  --red: #F87171;
+  --red-dim: rgba(248,113,113,0.08);
+  --green: #4ADE80;
+  --green-dim: rgba(74,222,128,0.08);
+  --text: #ECEAE3;
+  --text2: #7A7870;
+  --text3: #454440;
+  --r: 12px;
+  --r-sm: 7px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── SETUP ── */
+#setup {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  background: var(--bg);
+}
+
+.noise {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px;
+}
+
+.setup-wrap {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 460px;
+}
+
+.setup-eyebrow {
+  display: flex; align-items: center; gap: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--accent);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.eyebrow-line { flex: 1; height: 1px; background: rgba(200,255,71,0.2); }
+
+.setup-logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 48px;
+  letter-spacing: -3px;
+  color: var(--text);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.setup-logo span { color: var(--accent); }
+
+.setup-sub {
+  font-size: 14px;
+  color: var(--text2);
+  line-height: 1.7;
+  margin-bottom: 36px;
+  max-width: 380px;
+}
+
+.setup-sub strong { color: var(--text); font-weight: 500; }
+
+.field-wrap { margin-bottom: 14px; }
+
+.field-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 7px;
+}
+
+.field-input {
+  width: 100%;
+  background: var(--s2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  padding: 13px 15px;
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.field-input:focus { border-color: var(--accent); }
+.field-input::placeholder { color: var(--text3); }
+
+.field-hint {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 6px;
+  line-height: 1.6;
+}
+
+.field-hint a { color: var(--blue); text-decoration: none; }
+
+.launch-btn {
+  width: 100%;
+  padding: 15px;
+  background: var(--accent);
+  color: #080808;
+  border: none;
+  border-radius: var(--r-sm);
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.2px;
+  cursor: pointer;
+  margin-top: 24px;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+.launch-btn:hover { opacity: 0.88; }
+.launch-btn:active { transform: scale(0.985); }
+
+.setup-err {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--red);
+  display: none;
+}
+
+.perms-note {
+  display: flex; gap: 8px; align-items: flex-start;
+  background: var(--accent-dim);
+  border: 1px solid rgba(200,255,71,0.15);
+  border-radius: var(--r-sm);
+  padding: 12px 14px;
+  margin-top: 20px;
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.6;
+}
+
+.perms-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+/* ── MAIN APP ── */
+#app {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+/* Topbar */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  height: 52px;
+  border-bottom: 1px solid var(--border);
+  background: var(--s1);
+  position: sticky; top: 0; z-index: 200;
+  flex-shrink: 0;
+}
+
+.top-logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 17px;
+  letter-spacing: -0.8px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+.logo-pulse {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--text3);
+  transition: background 0.3s;
+}
+
+.logo-pulse.active { background: var(--accent); animation: pulse 2s infinite; }
+.logo-pulse.scanning { background: var(--blue); animation: pulse 0.8s infinite; }
+
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.top-center {
+  display: flex; align-items: center; gap: 6px;
+}
+
+.status-chip {
+  display: flex; align-items: center; gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+  border: 1px solid var(--border2);
+  background: var(--s2);
+  color: var(--text2);
+  transition: all 0.3s;
+}
+
+.status-chip.on { background: var(--accent-dim); border-color: rgba(200,255,71,0.25); color: var(--accent); }
+.status-chip.scanning { background: var(--blue-dim); border-color: rgba(96,165,250,0.25); color: var(--blue); }
+
+.status-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+.top-right { display: flex; gap: 6px; align-items: center; }
+
+.top-btn {
+  padding: 6px 12px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border2);
+  background: var(--s2);
+  color: var(--text2);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.top-btn:hover { color: var(--text); border-color: var(--border2); background: var(--s3); }
+.top-btn.danger:hover { color: var(--red); border-color: rgba(248,113,113,0.3); }
+
+/* App body */
+.app-body {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── SCREEN PREVIEW PANEL ── */
+.screen-panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.screen-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.screen-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text2);
+  display: flex; align-items: center; gap: 7px;
+  font-family: 'DM Mono', monospace;
+}
+
+.screen-actions { display: flex; gap: 6px; }
+
+.ctrl-btn {
+  padding: 5px 12px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border2);
+  background: var(--s2);
+  color: var(--text2);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.ctrl-btn:hover { color: var(--text); background: var(--s3); }
+.ctrl-btn.accent { background: var(--accent); color: #080808; border-color: var(--accent); font-weight: 600; }
+.ctrl-btn.accent:hover { opacity: 0.88; }
+.ctrl-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.preview-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.preview-placeholder {
+  text-align: center;
+  max-width: 300px;
+}
+
+.placeholder-icon {
+  width: 64px; height: 64px;
+  border-radius: 16px;
+  background: var(--s2);
+  border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  margin: 0 auto 16px;
+}
+
+.placeholder-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.placeholder-sub { font-size: 13px; color: var(--text2); line-height: 1.6; }
+
+.screen-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: var(--r);
+  border: 1px solid var(--border);
+  display: none;
+  background: #000;
+}
+
+/* Scan overlay */
+.scan-overlay {
+  position: absolute; inset: 20px;
+  border-radius: var(--r);
+  pointer-events: none;
+  display: none;
+  overflow: hidden;
+}
+
+.scan-overlay.active { display: block; }
+
+.scan-line {
+  position: absolute; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  animation: scanMove 2s ease-in-out infinite;
+}
+
+@keyframes scanMove {
+  0% { top: 0; opacity: 1; }
+  90% { top: 100%; opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+.scan-corners::before,
+.scan-corners::after {
+  content: '';
+  position: absolute;
+  width: 20px; height: 20px;
+  border-color: var(--accent);
+  border-style: solid;
+}
+
+.scan-corners::before { top: 0; left: 0; border-width: 2px 0 0 2px; border-radius: 4px 0 0 0; }
+.scan-corners::after { bottom: 0; right: 0; border-width: 0 2px 2px 0; border-radius: 0 0 4px 0; }
+
+/* Detected tool banner */
+.detected-banner {
+  position: absolute; top: 28px; left: 28px; right: 28px;
+  background: rgba(8,8,8,0.92);
+  border: 1px solid rgba(200,255,71,0.3);
+  border-radius: var(--r-sm);
+  padding: 10px 14px;
+  display: none;
+  align-items: center;
+  gap: 10px;
+  backdrop-filter: blur(8px);
+}
+
+.detected-banner.show { display: flex; }
+.detected-emoji { font-size: 18px; }
+.detected-tool { font-size: 13px; font-weight: 500; color: var(--accent); }
+.detected-sub { font-size: 11px; color: var(--text2); margin-top: 1px; }
+
+/* Frequency bar */
+.freq-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--s1);
+}
+
+.freq-label { font-size: 11px; color: var(--text3); white-space: nowrap; font-family: 'DM Mono', monospace; }
+
+.freq-slider {
+  flex: 1;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.freq-val {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--accent);
+  min-width: 30px;
+  text-align: right;
+}
+
+/* ── COACH PANEL ── */
+.coach-panel {
+  border-left: 1px solid var(--border);
+  background: var(--s1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Coach tabs */
+.coach-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.ctab {
+  flex: 1;
+  padding: 12px 8px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text3);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.ctab:hover { color: var(--text2); }
+.ctab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+.coach-pane { display: none; flex: 1; flex-direction: column; overflow-y: auto; }
+.coach-pane.active { display: flex; }
+
+/* ── LIVE TIP ── */
+.live-tip-section { padding: 16px; flex-shrink: 0; }
+
+.live-tip-card {
+  background: var(--s2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  overflow: hidden;
+  position: relative;
+}
+
+.live-tip-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s ease;
+}
+
+.live-tip-card.loaded::before { transform: scaleX(1); }
+
+.tip-top-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px 0;
+}
+
+.tip-badge {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border-radius: 4px;
+}
+
+.badge-vision { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(96,165,250,0.2); }
+.badge-shortcut { background: var(--accent-dim2); color: var(--accent); border: 1px solid rgba(200,255,71,0.2); }
+.badge-step { background: var(--green-dim); color: var(--green); border: 1px solid rgba(74,222,128,0.2); }
+.badge-explain { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(96,165,250,0.2); }
+
+.tip-source {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--text3);
+}
+
+.tip-headline {
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  padding: 10px 14px 6px;
+  line-height: 1.35;
+  letter-spacing: -0.3px;
+}
+
+.tip-body {
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.7;
+  padding: 0 14px 14px;
+}
+
+.kbd {
+  display: inline-block;
+  background: var(--s3);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--accent);
+}
+
+.tip-actions {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  padding: 0 14px 14px;
+}
+
+.tact-btn {
+  padding: 6px 12px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border2);
+  background: var(--s3);
+  color: var(--text2);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tact-btn:hover { color: var(--text); background: #2A2A28; }
+.tact-btn.go { background: var(--accent); color: #080808; border-color: var(--accent); font-weight: 600; }
+.tact-btn.go:hover { opacity: 0.88; }
+.tact-btn.warn { background: var(--red-dim); color: var(--red); border-color: rgba(248,113,113,0.2); }
+
+/* Loading state */
+.tip-loading {
+  padding: 24px 14px;
+  display: none;
+  align-items: center;
+  gap: 10px;
+  color: var(--text3);
+  font-size: 13px;
+}
+
+.tip-loading.show { display: flex; }
+
+.spinner {
+  width: 14px; height: 14px; flex-shrink: 0;
+  border: 2px solid rgba(200,255,71,0.15);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Practice */
+.practice-box {
+  margin: 0 16px 16px;
+  background: rgba(255,184,77,0.05);
+  border: 1px solid rgba(255,184,77,0.2);
+  border-radius: var(--r-sm);
+  padding: 12px 14px;
+  display: none;
+}
+
+.practice-box.show { display: block; }
+.practice-lbl { font-size: 10px; font-weight: 600; color: var(--orange); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; }
+.practice-text { font-size: 12.5px; color: var(--text2); line-height: 1.6; margin-bottom: 10px; }
+.practice-row { display: flex; gap: 6px; }
+
+/* History feed */
+.history-feed { padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+
+.feed-item {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  background: var(--s2);
+  border: 1px solid var(--border);
+  animation: feedIn 0.3s ease;
+}
+
+@keyframes feedIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+
+.feed-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  margin-top: 5px; flex-shrink: 0;
+}
+
+.fd-vision { background: var(--blue); }
+.fd-learned { background: var(--accent); }
+.fd-stuck { background: var(--red); }
+.fd-skipped { background: var(--text3); }
+
+.feed-text { font-size: 12px; color: var(--text2); line-height: 1.5; flex: 1; }
+.feed-tool { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text3); }
+.feed-time { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text3); }
+
+/* ── STUCK PANE ── */
+.stuck-pane-inner { padding: 16px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
+
+.stuck-lede {
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.6;
+  background: var(--red-dim);
+  border: 1px solid rgba(248,113,113,0.15);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+}
+
+.form-label { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); margin-bottom: 5px; display: block; }
+
+.form-ta {
+  width: 100%;
+  background: var(--s2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12.5px;
+  color: var(--text);
+  resize: vertical;
+  min-height: 60px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.form-ta:focus { border-color: var(--red); }
+.form-ta::placeholder { color: var(--text3); }
+
+.recovery-out {
+  background: var(--red-dim);
+  border: 1px solid rgba(248,113,113,0.18);
+  border-radius: var(--r-sm);
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.75;
+  white-space: pre-wrap;
+  display: none;
+}
+
+.recovery-out.show { display: block; }
+.recovery-out-label { font-size: 10px; font-weight: 600; color: var(--red); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+
+/* ── STATS PANE ── */
+.stats-inner { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+.stat-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: var(--s2); border-radius: var(--r-sm); }
+.stat-name { font-size: 12px; color: var(--text2); }
+.stat-val { font-family: 'DM Mono', monospace; font-size: 18px; color: var(--text); font-weight: 500; }
+
+.progress-section {}
+.prog-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text3); margin-bottom: 6px; }
+.prog-track { height: 4px; background: var(--s3); border-radius: 2px; }
+.prog-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.5s ease; }
+
+/* ── ASK BAR ── */
+.ask-bar {
+  border-top: 1px solid var(--border);
+  padding: 12px;
+  display: flex; gap: 8px;
+  flex-shrink: 0;
+  background: var(--s1);
+}
+
+.ask-input {
+  flex: 1;
+  background: var(--s2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  padding: 9px 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.ask-input:focus { border-color: var(--accent); }
+.ask-input::placeholder { color: var(--text3); }
+
+.ask-send {
+  padding: 9px 14px;
+  background: var(--accent);
+  color: #080808;
+  border: none;
+  border-radius: var(--r-sm);
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+
+.ask-send:hover { opacity: 0.88; }
+.ask-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(60px);
+  background: var(--s2);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  padding: 9px 18px;
+  border-radius: 20px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  z-index: 999;
+  white-space: nowrap;
+}
+
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* Canvas (hidden, used for frame capture) */
+#capture-canvas { display: none; }
+
+@media (max-width: 700px) {
+  .app-body { grid-template-columns: 1fr; }
+  .screen-panel { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="noise"></div>
+
+<!-- ═══════════════ APP ═══════════════ -->
+<div id="app">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="top-logo">
+      <div class="logo-pulse" id="logo-pulse"></div>
+      STACKR
+    </div>
+
+    <div class="top-center">
+      <div class="status-chip" id="status-chip">
+        <div class="status-dot"></div>
+        <span id="status-text">Screen not shared</span>
+      </div>
+    </div>
+
+    <div class="top-right">
+      <button class="top-btn" onclick="manualScan()" id="scan-btn">Scan now</button>
+      <button class="top-btn danger" onclick="stopCapture()">Stop sharing</button>
+      <button class="top-btn" onclick="goSetup()">⏏ Exit</button>
+    </div>
+  </div>
+
+  <div class="app-body">
+
+    <!-- Screen preview -->
+    <div class="screen-panel">
+      <div class="screen-header">
+        <div class="screen-title">
+          <span style="color:var(--text3);">◉</span>
+          <span id="preview-label">No screen shared</span>
+        </div>
+        <div class="screen-actions">
+          <button class="ctrl-btn" id="share-btn" onclick="startCapture()">Share screen</button>
+          <select id="interval-select" class="ctrl-btn" onchange="updateInterval(this.value)" style="cursor:pointer;">
+            <option value="0">Manual only</option>
+            <option value="15" selected>Every 15s</option>
+            <option value="30">Every 30s</option>
+            <option value="60">Every 60s</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="preview-area">
+        <div class="preview-placeholder" id="preview-placeholder">
+          <div class="placeholder-icon">📺</div>
+          <div class="placeholder-title">Share your screen</div>
+          <p class="placeholder-sub">Click "Share screen" above — STACKR will watch what you're doing and coach you in real time.</p>
+        </div>
+
+        <video id="screen-video" class="screen-video" autoplay muted playsinline></video>
+
+        <div class="scan-overlay scan-corners" id="scan-overlay">
+          <div class="scan-line"></div>
+        </div>
+
+        <div class="detected-banner" id="detected-banner">
+          <div class="detected-emoji" id="detected-emoji">📝</div>
+          <div>
+            <div class="detected-tool" id="detected-tool">Detecting...</div>
+            <div class="detected-sub" id="detected-sub">Coach tip loading</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="freq-bar">
+        <span class="freq-label">scan quality</span>
+        <input type="range" class="freq-slider" id="quality-slider" min="256" max="1280" value="640" step="128" oninput="updateQuality(this.value)">
+        <span class="freq-val" id="quality-val">640px</span>
+      </div>
+    </div>
+
+    <!-- Coach panel -->
+    <div class="coach-panel">
+
+      <div class="coach-tabs">
+        <div class="ctab active" onclick="switchPane('live', this)">Live Coach</div>
+        <div class="ctab" onclick="switchPane('stuck', this)">Stuck?</div>
+        <div class="ctab" onclick="switchPane('feed', this)">History</div>
+        <div class="ctab" onclick="switchPane('stats', this)">Stats</div>
+      </div>
+
+      <!-- LIVE COACH PANE -->
+      <div class="coach-pane active" id="pane-live">
+        <div class="live-tip-section">
+          <div class="live-tip-card" id="tip-card">
+            <div class="tip-loading show" id="tip-loading">
+              <div class="spinner"></div>
+              <span>Share your screen to get your first tip...</span>
+            </div>
+            <div id="tip-content" style="display:none;">
+              <div class="tip-top-bar">
+                <span class="tip-badge badge-vision" id="tip-badge">Vision</span>
+                <span class="tip-source" id="tip-source">waiting</span>
+              </div>
+              <div class="tip-headline" id="tip-headline">—</div>
+              <div class="tip-body" id="tip-body">Share your screen to get started.</div>
+              <div class="tip-actions">
+                <button class="tact-btn go" onclick="tryIt()">Try it now</button>
+                <button class="tact-btn" onclick="nextTip()">Next →</button>
+                <button class="tact-btn warn" onclick="switchPane('stuck', document.querySelectorAll('.ctab')[1])">Stuck?</button>
+                <button class="tact-btn" onclick="skipTip()">Skip</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="practice-box" id="practice-box">
+          <div class="practice-lbl">Micro-practice</div>
+          <div class="practice-text" id="practice-text">Try this right now in your workspace.</div>
+          <div class="practice-row">
+            <button class="tact-btn go" onclick="confirmPractice()" style="flex:1;">Done it! ✓</button>
+            <button class="tact-btn" onclick="closePractice()" style="flex:1;">Later</button>
+          </div>
+        </div>
+
+        <!-- Ask coach -->
+        <div style="padding:0 16px 12px; flex-shrink:0;">
+          <div class="coach-reply" id="coach-reply" style="display:none;background:var(--blue-dim);border:1px solid rgba(96,165,250,0.18);border-radius:var(--r-sm);padding:12px 14px;font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:10px;white-space:pre-wrap;"></div>
+        </div>
+
+        <div class="ask-bar">
+          <input class="ask-input" id="ask-input" placeholder="Ask about what you see... or anything" onkeydown="if(event.key==='Enter')askCoach()"/>
+          <button class="ask-send" id="ask-send" onclick="askCoach()">Ask →</button>
+        </div>
+      </div>
+
+      <!-- STUCK PANE -->
+      <div class="coach-pane" id="pane-stuck">
+        <div class="stuck-pane-inner">
+          <div class="stuck-lede">Answer two questions — get a personalised recovery plan. STACKR will also use your current screen as context if you've shared it.</div>
+
+          <div>
+            <label class="form-label">What were you trying to do?</label>
+            <textarea class="form-ta" id="stuck-q1" placeholder="e.g. Create a linked database in Notion"></textarea>
+          </div>
+
+          <div>
+            <label class="form-label">What happened instead?</label>
+            <textarea class="form-ta" id="stuck-q2" placeholder="e.g. Nothing happened when I clicked..."></textarea>
+          </div>
+
+          <div style="display:flex;gap:8px;">
+            <button class="tact-btn go" style="flex:1;" onclick="getRecovery()">Get recovery steps</button>
+            <button class="tact-btn" style="flex:1;" onclick="simplifyTask()">Simplify task</button>
+          </div>
+
+          <div class="recovery-out" id="recovery-out">
+            <div class="recovery-out-label" id="recovery-label">Recovery plan</div>
+            <div id="recovery-text"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HISTORY FEED -->
+      <div class="coach-pane" id="pane-feed">
+        <div class="history-feed" id="history-feed">
+          <div style="font-size:12px;color:var(--text3);text-align:center;padding:24px 0;">Events will appear here as you use STACKR.</div>
+        </div>
+      </div>
+
+      <!-- STATS PANE -->
+      <div class="coach-pane" id="pane-stats">
+        <div class="stats-inner">
+          <div class="stat-row"><span class="stat-name">Scans completed</span><span class="stat-val" id="st-scans">0</span></div>
+          <div class="stat-row"><span class="stat-name">Tips received</span><span class="stat-val" id="st-tips">0</span></div>
+          <div class="stat-row"><span class="stat-name">Shortcuts learned</span><span class="stat-val" id="st-learned">0</span></div>
+          <div class="stat-row"><span class="stat-name">Stuck mode used</span><span class="stat-val" id="st-stuck">0</span></div>
+          <div class="stat-row"><span class="stat-name">Questions asked</span><span class="stat-val" id="st-asked">0</span></div>
+
+          <div class="progress-section">
+            <div class="prog-label">
+              <span>Today's progress</span>
+              <span id="prog-pct">0%</span>
+            </div>
+            <div class="prog-track">
+              <div class="prog-fill" id="prog-fill" style="width:0%"></div>
+            </div>
+          </div>
+
+          <button class="ctrl-btn" onclick="exportStats()" style="width:100%;padding:10px;margin-top:4px;">Export session JSON</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<canvas id="capture-canvas"></canvas>
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
+let mediaStream = null;
+let scanInterval = null;
+let scanIntervalMs = 15000;
+let captureWidth = 640;
+let isScanning = false;
+let lastScreenB64 = null;
+let conversationHistory = [];
+let lastTip = null;
+let lastPractice = 'Try this action in your current tool.';
+
+let stats = { scans:0, tips:0, learned:0, stuck:0, asked:0 };
+let eventLog = [];
+
+const toolEmojis = { Notion:'📝', Canva:'🎨', ChatGPT:'🤖', Claude:'🧠', n8n:'⚡', Excel:'📊', Figma:'🖼️', VSCode:'💻', Gmail:'📧', Slack:'💬', YouTube:'▶️', unknown:'💻' };
+
+function goSetup() {
+  stopCapture();
+}
+
+// ══════════════════════════════════════
+// SCREEN CAPTURE
+// ══════════════════════════════════════
+async function startCapture() {
+  try {
+    mediaStream = await navigator.mediaDevices.getDisplayMedia({
+      video: { frameRate: 5, width: { ideal: 1920 } },
+      audio: false,
+    });
+
+    const video = document.getElementById('screen-video');
+    video.srcObject = mediaStream;
+    video.style.display = 'block';
+    document.getElementById('preview-placeholder').style.display = 'none';
+    document.getElementById('preview-label').textContent = 'Screen shared — live preview';
+    document.getElementById('share-btn').textContent = 'Reshare';
+
+    setStatus('on', 'Coach active');
+    document.getElementById('logo-pulse').className = 'logo-pulse active';
+
+    mediaStream.getVideoTracks()[0].addEventListener('ended', () => {
+      stopCapture();
+      showToast('Screen sharing ended');
+    });
+
+    // Auto-scan if interval set
+    if (scanIntervalMs > 0) {
+      scanInterval = setInterval(autoScan, scanIntervalMs);
+    }
+
+    // First scan after video loads
+    video.addEventListener('loadedmetadata', () => {
+      setTimeout(manualScan, 1000);
+    }, { once: true });
+
+  } catch(e) {
+    if (e.name !== 'NotAllowedError') {
+      showToast('Could not start screen capture: ' + e.message);
+    }
+  }
+}
+
+function stopCapture() {
+  if (mediaStream) {
+    mediaStream.getTracks().forEach(t => t.stop());
+    mediaStream = null;
+  }
+  clearInterval(scanInterval);
+  scanInterval = null;
+
+  const video = document.getElementById('screen-video');
+  video.style.display = 'none';
+  video.srcObject = null;
+  document.getElementById('preview-placeholder').style.display = 'block';
+  document.getElementById('preview-label').textContent = 'No screen shared';
+  document.getElementById('detected-banner').classList.remove('show');
+  document.getElementById('scan-overlay').classList.remove('active');
+
+  setStatus('off', 'Screen not shared');
+  document.getElementById('logo-pulse').className = 'logo-pulse';
+  showToast('Screen sharing stopped');
+}
+
+function updateInterval(val) {
+  scanIntervalMs = parseInt(val) * 1000;
+  clearInterval(scanInterval);
+  if (scanIntervalMs > 0 && mediaStream) {
+    scanInterval = setInterval(autoScan, scanIntervalMs);
+  }
+}
+
+function updateQuality(val) {
+  captureWidth = parseInt(val);
+  document.getElementById('quality-val').textContent = val + 'px';
+}
+
+function captureFrame() {
+  const video = document.getElementById('screen-video');
+  if (!video.videoWidth) return null;
+
+  const canvas = document.getElementById('capture-canvas');
+  const ratio = video.videoHeight / video.videoWidth;
+  canvas.width = captureWidth;
+  canvas.height = Math.round(captureWidth * ratio);
+
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/jpeg', 0.82).split(',')[1];
+}
+
+async function autoScan() {
+  if (isScanning || !mediaStream) return;
+  await runScan();
+}
+
+async function manualScan() {
+  if (!mediaStream) {
+    showToast('Share your screen first');
+    return;
+  }
+  if (isScanning) return;
+  await runScan();
+}
+
+async function runScan() {
+  isScanning = true;
+
+  const b64 = captureFrame();
+  if (!b64) { isScanning = false; return; }
+  lastScreenB64 = b64;
+
+  // Show scanning UI
+  document.getElementById('scan-overlay').classList.add('active');
+  setStatus('scanning', 'Scanning...');
+  document.getElementById('logo-pulse').className = 'logo-pulse scanning';
+  showTipLoading('Analysing your screen...');
+
+  stats.scans++;
+  updateStatsUI();
+
+  try {
+    const reply = await callClaudeVision(b64, buildScanPrompt());
+    const parsed = parseTipResponse(reply);
+    displayTip(parsed);
+    logEvent('vision_scan', parsed.tool, parsed.headline);
+  } catch(e) {
+    showTipError('Vision scan failed: ' + e.message);
+  }
+
+  document.getElementById('scan-overlay').classList.remove('active');
+  setStatus('on', 'Coach active');
+  document.getElementById('logo-pulse').className = 'logo-pulse active';
+  isScanning = false;
+}
+
+// ══════════════════════════════════════
+// CLAUDE API
+// ══════════════════════════════════════
+async function callClaudeVision(imageB64, userPrompt) {
+  const messages = [
+    {
+      role: 'user',
+      content: [
+        { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imageB64 } },
+        { type: 'text', text: userPrompt }
+      ]
+    }
+  ];
+
+  return await callClaude(messages, 500);
+}
+
+async function callClaude(messages, maxTokens = 400) {
+  const res = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: maxTokens,
+      system: buildSystemPrompt(),
+      messages,
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error?.message || `HTTP ${res.status}`);
+  }
+
+  const data = await res.json();
+  return data.content[0].text;
+}
+
+function buildSystemPrompt() {
+  return `You are STACKR, a calm, precise in-context learning coach for university students (18–21) learning digital tools.
+
+Your job: look at what's on screen and give ONE perfectly timed micro-tip.
+
+Rules:
+- Max 2 sentences for the tip body
+- Always identify the tool first (Notion, Canva, ChatGPT, Claude, n8n, Excel, Figma, VS Code, Gmail, Slack, or "unknown")
+- If you see a keyboard shortcut opportunity, show it as [⌘K] or [Ctrl+D]
+- Speak directly to the student: "you", not "the user"
+- Be encouraging, never condescending
+- Focus on the single most useful action right now
+- If nothing specific is visible, give a general next-step for the tool you detect`;
+}
+
+function buildScanPrompt() {
+  return `Look at this screenshot and respond in EXACTLY this JSON format (no markdown, no extra text):
+
+{
+  "tool": "Notion",
+  "tool_emoji": "📝",
+  "badge": "Shortcut",
+  "headline": "Short punchy tip title (max 7 words)",
+  "body": "One or two sentence explanation. Can include [⌘K] shortcut format.",
+  "practice": "One micro-task they can try right now.",
+  "detected_activity": "Brief description of what you see them doing (max 10 words)"
+}
+
+badge must be one of: "Shortcut", "Next step", "Explain", "Vision tip"
+Identify the tool from the UI visible on screen.`;
+}
+
+function parseTipResponse(raw) {
+  try {
+    const clean = raw.replace(/```json|```/g, '').trim();
+    return JSON.parse(clean);
+  } catch {
+    // Fallback if JSON fails
+    return {
+      tool: 'Unknown',
+      tool_emoji: '💻',
+      badge: 'Vision tip',
+      headline: 'Here\'s a tip for what I see',
+      body: raw.slice(0, 200),
+      practice: 'Try one action in your current workspace.',
+      detected_activity: 'Working on screen',
+    };
+  }
+}
+
+async function askCoach() {
+  const field = document.getElementById('ask-input');
+  const q = field.value.trim();
+  if (!q) return;
+
+  const send = document.getElementById('ask-send');
+  send.disabled = true;
+  send.textContent = '...';
+
+  const replyBox = document.getElementById('coach-reply');
+  replyBox.style.display = 'block';
+  replyBox.textContent = '...';
+
+  stats.asked++;
+  updateStatsUI();
+
+  try {
+    let messages;
+    if (lastScreenB64) {
+      // Include the last captured frame for context
+      messages = [
+        {
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: lastScreenB64 } },
+            { type: 'text', text: 'Looking at my screen, ' + q }
+          ]
+        }
+      ];
+    } else {
+      messages = [{ role: 'user', content: q }];
+    }
+
+    const reply = await callClaude(messages, 400);
+    replyBox.textContent = reply;
+    logEvent('question', null, q.slice(0, 40));
+    field.value = '';
+  } catch(e) {
+    replyBox.textContent = 'Error: ' + e.message;
+  }
+
+  send.disabled = false;
+  send.textContent = 'Ask →';
+}
+
+async function getRecovery() {
+  const q1 = document.getElementById('stuck-q1').value.trim();
+  const q2 = document.getElementById('stuck-q2').value.trim();
+  if (!q1) { showToast('Describe what you were trying to do'); return; }
+
+  stats.stuck++;
+  updateStatsUI();
+
+  const out = document.getElementById('recovery-out');
+  const txt = document.getElementById('recovery-text');
+  const lbl = document.getElementById('recovery-label');
+  out.classList.add('show');
+  lbl.textContent = 'Recovery plan';
+  txt.textContent = '...';
+
+  logEvent('stuck', null, q1.slice(0, 40));
+
+  try {
+    let content;
+    if (lastScreenB64) {
+      content = [
+        { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: lastScreenB64 } },
+        { type: 'text', text: `Student is stuck. Looking at their screen:\nTrying to: ${q1}\nWhat happened: ${q2 || 'not specified'}\n\nGive exactly 3 numbered recovery steps. 1 sentence each. Be specific to what you see on screen.` }
+      ];
+    } else {
+      content = `Student is stuck.\nTrying to: ${q1}\nWhat happened: ${q2 || 'not specified'}\n\nGive exactly 3 numbered recovery steps. 1 sentence each.`;
+    }
+
+    const reply = await callClaude([{ role: 'user', content }], 400);
+    txt.textContent = reply;
+  } catch(e) {
+    txt.textContent = 'Error: ' + e.message;
+  }
+}
+
+async function simplifyTask() {
+  const q1 = document.getElementById('stuck-q1').value.trim();
+  if (!q1) { showToast('Describe the task first'); return; }
+
+  const out = document.getElementById('recovery-out');
+  const txt = document.getElementById('recovery-text');
+  const lbl = document.getElementById('recovery-label');
+  out.classList.add('show');
+  lbl.textContent = 'Task broken into steps';
+  txt.textContent = '...';
+
+  try {
+    let content;
+    if (lastScreenB64) {
+      content = [
+        { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: lastScreenB64 } },
+        { type: 'text', text: `Break this task into 4 tiny steps for a beginner. Looking at their screen for context.\nTask: ${q1}\nFormat: numbered list, 1 sentence each, start with an action verb.` }
+      ];
+    } else {
+      content = `Break this task into 4 tiny steps for a beginner:\nTask: ${q1}\nFormat: numbered list, 1 sentence each, start with an action verb.`;
+    }
+
+    const reply = await callClaude([{ role: 'user', content }], 400);
+    txt.textContent = reply;
+  } catch(e) {
+    txt.textContent = 'Error: ' + e.message;
+  }
+}
+
+// ══════════════════════════════════════
+// TIP DISPLAY
+// ══════════════════════════════════════
+function displayTip(t) {
+  lastTip = t;
+  lastPractice = t.practice || 'Try this action right now.';
+  stats.tips++;
+  updateStatsUI();
+
+  const badgeMap = { 'Shortcut':'badge-shortcut', 'Next step':'badge-step', 'Explain':'badge-explain', 'Vision tip':'badge-vision' };
+
+  document.getElementById('tip-loading').classList.remove('show');
+  document.getElementById('tip-content').style.display = 'block';
+
+  document.getElementById('tip-badge').textContent = t.badge || 'Vision tip';
+  document.getElementById('tip-badge').className = 'tip-badge ' + (badgeMap[t.badge] || 'badge-vision');
+  document.getElementById('tip-source').textContent = t.tool || 'screen';
+  document.getElementById('tip-headline').textContent = t.headline || '—';
+  document.getElementById('tip-body').innerHTML = (t.body || '').replace(/\[([^\]]+)\]/g, '<span class="kbd">$1</span>');
+  document.getElementById('practice-text').textContent = t.practice || 'Try this now.';
+
+  // Animate the top bar
+  const card = document.getElementById('tip-card');
+  card.classList.remove('loaded');
+  setTimeout(() => card.classList.add('loaded'), 50);
+
+  // Show detected banner
+  const emoji = t.tool_emoji || toolEmojis[t.tool] || '💻';
+  document.getElementById('detected-emoji').textContent = emoji;
+  document.getElementById('detected-tool').textContent = t.tool || 'Detected';
+  document.getElementById('detected-sub').textContent = t.detected_activity || 'Tip ready';
+  document.getElementById('detected-banner').classList.add('show');
+  setTimeout(() => document.getElementById('detected-banner').classList.remove('show'), 4000);
+
+  // Switch to live coach pane
+  switchPane('live', document.querySelector('.ctab'));
+
+  closePractice();
+}
+
+function showTipLoading(msg) {
+  document.getElementById('tip-loading').classList.add('show');
+  document.getElementById('tip-loading').querySelector('span').textContent = msg || 'Scanning...';
+  document.getElementById('tip-content').style.display = 'none';
+}
+
+function showTipError(msg) {
+  document.getElementById('tip-loading').classList.remove('show');
+  document.getElementById('tip-content').style.display = 'block';
+  document.getElementById('tip-headline').textContent = 'Scan failed';
+  document.getElementById('tip-body').textContent = msg;
+}
+
+function tryIt() {
+  document.getElementById('practice-box').classList.add('show');
+  document.getElementById('practice-text').textContent = lastPractice;
+}
+
+function closePractice() {
+  document.getElementById('practice-box').classList.remove('show');
+}
+
+function confirmPractice() {
+  stats.learned++;
+  updateStatsUI();
+  closePractice();
+  showToast('Shortcut learned! ' + stats.learned + ' today 🎉');
+  logEvent('learned', lastTip?.tool, lastTip?.headline);
+  if (stats.learned > 0) {
+    const pct = Math.min(100, Math.round((stats.learned / 10) * 100));
+    document.getElementById('prog-fill').style.width = pct + '%';
+    document.getElementById('prog-pct').textContent = pct + '%';
+    document.getElementById('st-learned').textContent = stats.learned;
+  }
+}
+
+function nextTip() {
+  if (!mediaStream) { showToast('Share your screen first'); return; }
+  manualScan();
+}
+
+function skipTip() {
+  logEvent('skipped', lastTip?.tool, lastTip?.headline);
+  showToast('Skipped — scanning for next tip...');
+  if (mediaStream) manualScan();
+}
+
+// ══════════════════════════════════════
+// UI HELPERS
+// ══════════════════════════════════════
+function switchPane(id, el) {
+  document.querySelectorAll('.coach-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.ctab').forEach(t => t.classList.remove('active'));
+  document.getElementById('pane-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+}
+
+function setStatus(state, text) {
+  const chip = document.getElementById('status-chip');
+  const txt = document.getElementById('status-text');
+  chip.className = 'status-chip';
+  if (state === 'on') chip.classList.add('on');
+  if (state === 'scanning') chip.classList.add('scanning');
+  txt.textContent = text;
+}
+
+function logEvent(type, tool, detail) {
+  const now = new Date();
+  const time = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  const entry = { type, tool, detail, time };
+  eventLog.push(entry);
+
+  const dotClass = { vision_scan:'fd-vision', learned:'fd-learned', stuck:'fd-stuck', skipped:'fd-skipped', question:'fd-vision' }[type] || 'fd-vision';
+  const label = { vision_scan:'Screen scanned', learned:'Learned', stuck:'Stuck mode', skipped:'Tip skipped', question:'Question asked' }[type] || type;
+
+  const feed = document.getElementById('history-feed');
+  const placeholder = feed.querySelector('div[style]');
+  if (placeholder) placeholder.remove();
+
+  const item = document.createElement('div');
+  item.className = 'feed-item';
+  item.innerHTML = `
+    <div class="feed-dot ${dotClass}"></div>
+    <div style="flex:1;min-width:0;">
+      <div class="feed-text">${label}${detail ? ': ' + detail : ''}</div>
+      ${tool ? `<div class="feed-tool">${tool}</div>` : ''}
+    </div>
+    <div class="feed-time">${time}</div>
+  `;
+  feed.prepend(item);
+}
+
+function updateStatsUI() {
+  document.getElementById('st-scans').textContent = stats.scans;
+  document.getElementById('st-tips').textContent = stats.tips;
+  document.getElementById('st-learned').textContent = stats.learned;
+  document.getElementById('st-stuck').textContent = stats.stuck;
+  document.getElementById('st-asked').textContent = stats.asked;
+}
+
+function exportStats() {
+  const data = { stats, events: eventLog, exported: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'stackr-session.json';
+  a.click();
+  showToast('Session exported');
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
